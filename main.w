@@ -21,8 +21,6 @@ class DiscordClient {
     this.token = props.token;
   }
 
-  pub static extern "./util.js" _discordRequest(endpoint: str, token: str): Json;
-
   pub inflight sendMessage(args: PostMessageOptions) {
     let token = this.token.value();
 

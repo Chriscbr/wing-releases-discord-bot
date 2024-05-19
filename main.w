@@ -187,7 +187,7 @@ let winglibsScanner = new GithubScanner(owner: "winglang", repo: "winglibs") as 
 let discordPublisher = new DiscordPublisher(
   discord: discord,
   allReleasesChannel: nil,
-  breakingChangesChannel: "breaking-changes",
+  breakingChangesChannel: "1241131862819340349", // #breaking-changes
 ) as "DiscordPublisher";
 
 wingScanner.onRelease(discordPublisher);

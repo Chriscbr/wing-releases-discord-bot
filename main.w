@@ -64,7 +64,7 @@ struct DiscordPublisherProps {
   breakingChangesChannel: str?;
 }
 
-let breakingChangeRegex = regex.compile("^v[0-9]+\\.0\\.0$|^v0\\.[0-9]+\\.0$");
+let breakingChangeRegex = regex.compile("^(.*-)?v[0-9]+\\.0\\.0$|^(.*-)?v0\\.[0-9]+\\.0$");
 
 let isBreakingChange = inflight (tag: str): bool => {
   // version should match vx.0.0 or v0.x.0
@@ -86,16 +86,17 @@ class DiscordPublisher impl IOnGitHubRelease {
     log("Handling release: {Json.stringify(release)}");
 
     let var text = "{release.title} has been released! :rocket:";
-    text += "\n\n{release.body}";
+    if release.body?.trim() != "" {
+      text += "\n\n{release.body}";
+    }
     text += "\n\nLearn more: {release.url}";
-
-    log("Posting discord message: {text}");
 
     let breakingChange = isBreakingChange(release.tag);
 
     log("Is {release.tag} a breaking change?: {breakingChange}");
 
     if breakingChange && this.breakingChangesChannel != nil {
+      log("Posting discord message: {text}");
       this.discord.sendMessage(channel: this.breakingChangesChannel!, text: text);
     }
   }
@@ -204,4 +205,12 @@ test "isBreakingChange" {
   assert(!isBreakingChange("v0.1.1"));
   assert(!isBreakingChange("v1.1.0"));
   assert(!isBreakingChange("v1.1.1"));
+  assert(isBreakingChange("lib-v1.0.0"));
+  assert(isBreakingChange("lib-v11.0.0"));
+  assert(isBreakingChange("lib-v0.1.0"));
+  assert(isBreakingChange("lib-v0.11.0"));
+  assert(!isBreakingChange("lib-v0.0.1"));
+  assert(!isBreakingChange("lib-v0.1.1"));
+  assert(!isBreakingChange("lib-v1.1.0"));
+  assert(!isBreakingChange("lib-v1.1.1"));
 }

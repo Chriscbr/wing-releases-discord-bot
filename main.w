@@ -24,6 +24,7 @@ class DiscordClient {
   pub inflight sendMessage(args: PostMessageOptions) {
     let token = this.token.value();
 
+    // API documentation: https://discord.com/developers/docs/resources/channel#create-message
     let endpoint = "https://discord.com/api/v10/channels/{args.channel}/messages";
     let res = http.fetch(endpoint, {
       method: http.HttpMethod.POST,
@@ -183,6 +184,9 @@ let discord = new DiscordClient(token: discordToken) as "DiscordClient";
 
 let wingScanner = new GithubScanner(owner: "winglang", repo: "wing") as "WingScanner";
 let winglibsScanner = new GithubScanner(owner: "winglang", repo: "winglibs") as "WinglibsScanner";
+
+// To get the ID of a discord channel, you can right click on the channel and click "Copy Link".
+// The ID is the part of the URL after the very last "/".
 
 let discordPublisher = new DiscordPublisher(
   discord: discord,

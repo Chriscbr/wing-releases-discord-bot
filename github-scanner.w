@@ -6,7 +6,6 @@ pub interface IOnGitHubRelease {
 }
 
 pub struct GithubScannerProps {
-  owner: str;
   repo: str;
 }
 
@@ -19,6 +18,10 @@ pub class GithubScanner {
     this.api = new cloud.Api();
     this.releases = new cloud.Topic();
     this.url = this.api.url;
+
+    if props.repo.split("/").length != 2 {
+      throw "invalid repo name: {props.repo} (expected format: owner/repo)";
+    }
 
     this.api.post("/payload", inflight (req: cloud.ApiRequest): cloud.ApiResponse => {
       if req.headers?.tryGet("x-github-event") == "ping" {
@@ -43,7 +46,7 @@ pub class GithubScanner {
       }
 
       let repo = str.fromJson(body.get("repository").get("full_name"));
-      if repo != "{props.owner}/{props.repo}" {
+      if repo != props.repo {
         let message = "skipping release for repo '{repo}'";
         log(message);
         return cloud.ApiResponse {

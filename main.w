@@ -1,23 +1,12 @@
 bring cloud;
 bring http;
 bring util;
-bring "./github.w" as github;
+bring "./github-types.w" as gh;
+bring "./github-scanner.w" as ghscanner;
 bring "./discord.w" as discord;
 
 // -------------------------------
 // Github
-
-struct GithubRelease {
-  title: str;
-  author: str;
-  tag: str;
-  body: str;
-  url: str;
-}
-
-interface IOnGitHubRelease {
-  inflight handle(release: GithubRelease): void;
-}
 
 struct DiscordPublisherProps {
   discordClient: discord.DiscordClient;
@@ -31,7 +20,7 @@ let isBreakingChange = inflight (tag: str): bool => {
   return breakingChangeRegex.test(tag);
 };
 
-class DiscordPublisher impl IOnGitHubRelease {
+class DiscordPublisher impl ghscanner.IOnGitHubRelease {
   discordClient: discord.DiscordClient;
   releasesChannel: str;
 
@@ -40,7 +29,7 @@ class DiscordPublisher impl IOnGitHubRelease {
     this.releasesChannel = props.releasesChannel;
   }
 
-  pub inflight handle(release: GithubRelease) {
+  pub inflight handle(release: gh.GithubRelease) {
     log("Handling release: {Json.stringify(release)}");
 
     let var text = "{release.title} has been released! :rocket:";
@@ -60,87 +49,14 @@ class DiscordPublisher impl IOnGitHubRelease {
   }
 }
 
-struct GithubScannerProps {
-  owner: str;
-  repo: str;
-}
-
-class GithubScanner {
-  api: cloud.Api;
-  pub url: str;
-  releases: cloud.Topic;
-
-  new(props: GithubScannerProps) {
-    this.api = new cloud.Api();
-    this.releases = new cloud.Topic();
-    this.url = this.api.url;
-
-    this.api.post("/payload", inflight (req: cloud.ApiRequest): cloud.ApiResponse => {
-      if req.headers?.tryGet("x-github-event") == "ping" {
-        return cloud.ApiResponse {
-          status: 200,
-          body: "Received ping event from GitHub."
-        };
-      }
-
-      let body = Json.parse(req.body ?? "\{\}");
-
-      log("received event: {Json.stringify(body)}");
-
-      let eventAction = str.fromJson(body.get("action"));
-      if eventAction != "released" {
-        let message = "Skipping event type with type '{eventAction}' (only looking for \"released\")";
-        log(message);
-        return cloud.ApiResponse {
-          status: 200,
-          body: message, 
-        };
-      }
-
-      let repo = str.fromJson(body.get("repository").get("full_name"));
-      if repo != "{props.owner}/{props.repo}" {
-        let message = "skipping release for repo '{repo}'";
-        log(message);
-        return cloud.ApiResponse {
-          status: 200,
-          body: message,
-        };
-      }
-
-      this.releases.publish(Json.stringify(body));
-      let releaseTag = str.fromJson(body.get("release").get("tag_name"));
-      log("published release {releaseTag} to topic");
-
-      return cloud.ApiResponse {
-        status: 200,
-        body: "published release event",
-      };
-    });
-  }
-
-  pub onRelease(handler: IOnGitHubRelease): cloud.Function {
-    return this.releases.onMessage(inflight (message: str) => {
-      let event = Json.parse(message);
-      let release = GithubRelease {
-        title: str.fromJson(event.get("release").get("name")),
-        author: str.fromJson(event.get("release").get("author").get("login")),
-        tag: str.fromJson(event.get("release").get("tag_name")),
-        body: str.fromJson(event.get("release").get("body")),
-        url: str.fromJson(event.get("release").get("html_url")),
-      };
-      handler.handle(release);
-    });
-  }
-}
-
 // --------------------------------
 // Main
 
 let discordToken = new cloud.Secret(name: "DISCORD_TOKEN") as "DiscordToken";
 let discordClient = new discord.DiscordClient(token: discordToken) as "DiscordClient";
 
-let wingScanner = new GithubScanner(owner: "winglang", repo: "wing") as "WingScanner";
-let winglibsScanner = new GithubScanner(owner: "winglang", repo: "winglibs") as "WinglibsScanner";
+let wingScanner = new ghscanner.GithubScanner(owner: "winglang", repo: "wing") as "WingScanner";
+let winglibsScanner = new ghscanner.GithubScanner(owner: "winglang", repo: "winglibs") as "WinglibsScanner";
 
 // To get the ID of a discord channel, you can right click on the channel and click "Copy Link".
 // The ID is the part of the URL after the very last "/".

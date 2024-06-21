@@ -61,8 +61,7 @@ interface IOnGitHubRelease {
 
 struct DiscordPublisherProps {
   discord: DiscordClient;
-  allReleasesChannel: str?;
-  breakingChangesChannel: str?;
+  releasesChannel: str;
 }
 
 let breakingChangeRegex = regex.compile("^(.*-)?v[0-9]+\\.0\\.0$|^(.*-)?v0\\.[0-9]+\\.0$");
@@ -74,13 +73,11 @@ let isBreakingChange = inflight (tag: str): bool => {
 
 class DiscordPublisher impl IOnGitHubRelease {
   discord: DiscordClient;
-  allReleasesChannel: str?;
-  breakingChangesChannel: str?;
+  releasesChannel: str;
 
   new(props: DiscordPublisherProps) {
     this.discord = props.discord;
-    this.allReleasesChannel = props.allReleasesChannel;
-    this.breakingChangesChannel = props.breakingChangesChannel;
+    this.releasesChannel = props.releasesChannel;
   }
 
   pub inflight handle(release: GithubRelease) {
@@ -96,9 +93,9 @@ class DiscordPublisher impl IOnGitHubRelease {
 
     log("Is {release.tag} a breaking change?: {breakingChange}");
 
-    if breakingChange && this.breakingChangesChannel != nil {
+    if breakingChange {
       log("Posting discord message: {text}");
-      this.discord.sendMessage(channel: this.breakingChangesChannel!, text: text);
+      this.discord.sendMessage(channel: this.releasesChannel, text: text);
     }
   }
 }
@@ -190,8 +187,7 @@ let winglibsScanner = new GithubScanner(owner: "winglang", repo: "winglibs") as 
 
 let discordPublisher = new DiscordPublisher(
   discord: discord,
-  allReleasesChannel: nil,
-  breakingChangesChannel: "1241131862819340349", // #breaking-changes
+  releasesChannel: "1241131862819340349", // #releases
 ) as "DiscordPublisher";
 
 wingScanner.onRelease(discordPublisher);

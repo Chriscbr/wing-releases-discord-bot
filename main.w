@@ -7,6 +7,8 @@ bring "./github-scanner.w" as ghscanner;
 bring "./discord.w" as discord;
 bring "./discord-publisher.w" as discordpublisher;
 
+let RELEASES_CHANNEL = "1241131862819340349"; // #releases
+
 let discordToken = new cloud.Secret(name: "DISCORD_TOKEN") as "DiscordToken";
 let discordClient = new discord.DiscordClient(token: discordToken) as "DiscordClient";
 
@@ -18,7 +20,7 @@ let winglibsScanner = new ghscanner.GithubScanner(repo: "winglang/winglibs") as 
 
 let discordPublisher = new discordpublisher.DiscordPublisher(
   discordClient: discordClient,
-  releasesChannel: "1241131862819340349", // #releases
+  releasesChannel: RELEASES_CHANNEL,
 ) as "DiscordPublisher";
 
 wingScanner.onRelease(discordPublisher);

@@ -29,7 +29,7 @@ winglibsScanner.onRelease(discordPublisher);
 
 let generateSummaryBetweenDates = inflight (since: str, util: str) => {
   let commits = ghclient.GithubClient.getCommits("winglang", "wing", since, util, nil);
-  let lines = MutArray<str>[];
+  let var lines = MutArray<str>[];
   let now = datetime.utcNow();
   lines.push("New features and improvements made to Wing this past week 🚀:");
   lines.push("");
@@ -37,6 +37,14 @@ let generateSummaryBetweenDates = inflight (since: str, util: str) => {
   for commit in commits {
     if commit.message.startsWith("chore") {
       continue;
+    }
+
+    if lines.join("\n").length > 1500 {
+      log(lines.join("\n"));
+      discordClient.sendMessage(channel: RELEASES_CHANNEL, text: lines.join("\n"));
+      lines = MutArray<str>[];
+      lines.push("(...continued)");
+      lines.push("");
     }
 
     // kinda gross - use a for loop to replace each occurrence of #xxxx with a link to the PR
@@ -58,7 +66,7 @@ let generateSummaryBetweenDates = inflight (since: str, util: str) => {
   }
 
   log(lines.join("\n"));
-  discordClient.sendMessage(channel: "1241131862819340349", text: lines.join("\n"));
+  discordClient.sendMessage(channel: RELEASES_CHANNEL, text: lines.join("\n"));
 };
 
 let previousWeekSummaryFn = new cloud.Function(inflight () => {

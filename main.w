@@ -6,6 +6,7 @@ bring "./github-types.w" as gh;
 bring "./github-scanner.w" as ghscanner;
 bring "./discord.w" as discord;
 bring "./discord-publisher.w" as discordpublisher;
+bring "./util.w" as myutil;
 
 let RELEASES_CHANNEL = "1241131862819340349"; // #releases
 
@@ -26,8 +27,8 @@ let discordPublisher = new discordpublisher.DiscordPublisher(
 wingScanner.onRelease(discordPublisher);
 winglibsScanner.onRelease(discordPublisher);
 
-let weeklySummaryFn = new cloud.Function(inflight () => {
-  let commits = ghclient.GithubClient.getCommitsSinceLastSunday("winglang", "wing", nil);
+let generateSummaryBetweenDates = inflight (since: str, util: str) => {
+  let commits = ghclient.GithubClient.getCommits("winglang", "wing", since, util, nil);
   let lines = MutArray<str>[];
   let now = datetime.utcNow();
   lines.push("New features and improvements made to Wing this past week 🚀:");
@@ -58,7 +59,15 @@ let weeklySummaryFn = new cloud.Function(inflight () => {
 
   // log(lines.join("\n"));
   discordClient.sendMessage(channel: "1241131862819340349", text: lines.join("\n"));
-});
+};
+
+let previousWeekSummaryFn = new cloud.Function(inflight () => {
+  generateSummaryBetweenDates(myutil.nSundaysAgo(2), myutil.nSundaysAgo(1));
+}) as "PreviousWeekSummaryFn";
+
+let weeklySummaryFn = new cloud.Function(inflight () => {
+  generateSummaryBetweenDates(myutil.nSundaysAgo(1), myutil.nSundaysAgo(0));
+}) as "WeeklySummaryFn";
 
 let schedule = new cloud.Schedule(
   // Every Sunday at 12:15 UTC

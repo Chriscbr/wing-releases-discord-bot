@@ -4,4 +4,5 @@ pub class Util {
     let r = regex.compile("^(.*-)?v[0-9]+\\.0\\.0$|^(.*-)?v0\\.[0-9]+\\.0$");
   return r.test(tag);
   }
+  pub static extern "./util.js" inflight nSundaysAgo(count: num): str;
 }

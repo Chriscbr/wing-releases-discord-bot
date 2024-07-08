@@ -1,5 +1,5 @@
 export default interface extern {
-  getCommitsSinceLastSunday: (owner: string, name: string, token?: (string) | undefined) => Promise<(readonly (GitCommit)[])>,
+  getCommits: (owner: string, name: string, since?: (string) | undefined, until?: (string) | undefined, token?: (string) | undefined) => Promise<(readonly (GitCommit)[])>,
 }
 export interface GitCommit {
   readonly author: string;

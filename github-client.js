@@ -1,17 +1,14 @@
 const { Octokit } = require("@octokit/rest");
-const { DateTime } = require("luxon");
 
-export async function getCommitsSinceLastSunday(repoOwner, repoName, token) {
+export async function getCommits(repoOwner, repoName, since, until, token) {
     const octokit = new Octokit({ auth: token });
-
-    // Get the date of last Sunday at 12:00 UTC
-    const lastSunday = DateTime.utc().startOf('week').minus({ weeks: 1 }).plus({ hours: 12 }).toISO();
 
     try {
         const response = await octokit.rest.repos.listCommits({
             owner: repoOwner,
             repo: repoName,
-            since: lastSunday,
+            since,
+            until,
             per_page: 100,
         });
 

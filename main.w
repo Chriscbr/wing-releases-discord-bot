@@ -57,7 +57,7 @@ let generateSummaryBetweenDates = inflight (since: str, util: str) => {
     lines.push("* {message} by {commit.author} ([@{commit.username}](https://github.com/{commit.username}))");
   }
 
-  // log(lines.join("\n"));
+  log(lines.join("\n"));
   discordClient.sendMessage(channel: "1241131862819340349", text: lines.join("\n"));
 };
 

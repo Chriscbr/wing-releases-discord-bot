@@ -43,8 +43,6 @@ let generateSummaryBetweenDates = inflight (since: str, util: str) => {
       log(lines.join("\n"));
       discordClient.sendMessage(channel: RELEASES_CHANNEL, text: lines.join("\n"));
       lines = MutArray<str>[];
-      lines.push("(...continued)");
-      lines.push("");
     }
 
     // kinda gross - use a for loop to replace each occurrence of #xxxx with a link to the PR

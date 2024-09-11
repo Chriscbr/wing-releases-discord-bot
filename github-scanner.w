@@ -24,7 +24,7 @@ pub class GithubScanner {
     }
 
     this.api.post("/payload", inflight (req: cloud.ApiRequest): cloud.ApiResponse => {
-      if req.headers?.tryGet("x-github-event") == "ping" {
+      if req.headers?.tryGet("x-github-event") == "ping" || req.headers?.tryGet("X-Github-Event") == "ping" {
         return cloud.ApiResponse {
           status: 200,
           body: "Received ping event from GitHub."
@@ -33,7 +33,7 @@ pub class GithubScanner {
 
       let body = Json.parse(req.body ?? "\{\}");
 
-      log("received event: {Json.stringify(body)}");
+      log("received event: {Json.stringify(body, indent: 2)} with headers: {Json.stringify(req.headers, indent: 2)}");
 
       let eventAction = str.fromJson(body.get("action"));
       if eventAction != "released" {
